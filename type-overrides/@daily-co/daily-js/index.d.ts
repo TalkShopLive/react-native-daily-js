@@ -69,7 +69,6 @@ export type DailyEvent =
   | 'active-speaker-change'
   | 'network-quality-change'
   | 'network-connection'
-  | 'test-completed'
   | 'cpu-load-change'
   | 'error'
   | 'nonfatal-error'
@@ -91,7 +90,6 @@ export type DailyEvent =
   | 'local-audio-level'
   | 'remote-participants-audio-level'
   | 'dialin-connected'
-  | 'dialin-ready'
   | 'dialin-error'
   | 'dialin-stopped'
   | 'dialin-warning'
@@ -208,9 +206,6 @@ export interface DailyAdvancedConfig {
    * @deprecated This property will be removed. Instead, use sendSettings, which is found in DailyCallOptions.
    */
   camSimulcastEncodings?: CamSimulcastEncoding[];
-  /**
-   * @deprecated This property will be removed. All calls use v2CamAndMic.
-   */
   v2CamAndMic?: boolean;
   micAudioMode?: 'music' | 'speech';
   userMediaAudioConstraints?: MediaTrackConstraints;
@@ -426,56 +421,6 @@ export interface DailyStartScreenShare {
   screenVideoSendSettings?:
     | DailyVideoSendSettings
     | DailyScreenVideoSendSettingsPreset;
-}
-
-export type DailyQualityTestResult =
-  | 'good'
-  | 'bad'
-  | 'warning'
-  | 'aborted'
-  | 'failed';
-
-export type DailyP2PCallQualityTestResults =
-  | DailyP2PCallQualityTestStats
-  | DailyCallQualityTestAborted
-  | DailyCallQualityTestFailure;
-
-export interface DailyP2PCallQualityTestStats {
-  result: Extract<DailyQualityTestResult, 'good' | 'warning' | 'bad'>;
-  data: DailyP2PCallQualityTestData;
-  secondsElapsed: number;
-}
-
-export interface DailyP2PCallQualityTestData {
-  maxRoundTripTime: number | null;
-  avgRoundTripTime: number | null;
-  avgRecvPacketLoss: number | null;
-  avgAvailableOutgoingBitrate: number | null;
-  avgSendBitsPerSecond: number | null;
-  avgRecvBitsPerSecond: number | null;
-}
-
-export interface DailyCallQualityTestAborted {
-  result: Extract<DailyQualityTestResult, 'aborted'>;
-  secondsElapsed: number;
-}
-
-export interface DailyCallQualityTestFailure {
-  result: Extract<DailyQualityTestResult, 'failed'>;
-  errorMsg: string;
-  error?: DailyFatalErrorObject<DailyFatalErrorType>;
-  secondsElapsed: number;
-}
-
-export interface DailyWebsocketConnectivityTestResults {
-  result: 'passed' | 'failed' | 'warning' | 'aborted';
-  abortedRegions: string[];
-  failedRegions: string[];
-  passedRegions: string[];
-}
-
-export interface DailyNetworkConnectivityTestStats {
-  result: 'passed' | 'failed' | 'aborted';
 }
 
 export interface DailyNetworkStats {
@@ -949,15 +894,6 @@ export interface DailyEventObjectNetworkConnectionEvent
   sfu_id?: string;
 }
 
-export interface DailyEventObjectTestCompleted extends DailyEventObjectBase {
-  action: Extract<DailyEvent, 'test-completed'>;
-  test: 'p2p-call-quality' | 'network-connectivity' | 'websocket-connectivity';
-  results:
-    | DailyP2PCallQualityTestResults
-    | DailyNetworkConnectivityTestStats
-    | DailyWebsocketConnectivityTestResults;
-}
-
 export interface DailyEventObjectActiveSpeakerChange
   extends DailyEventObjectBase {
   action: Extract<DailyEvent, 'active-speaker-change'>;
@@ -975,7 +911,6 @@ export interface DailyEventObjectAppMessage extends DailyEventObjectBase {
 export interface DailyEventObjectTranscriptionMessage
   extends DailyEventObjectBase {
   action: Extract<DailyEvent, 'transcription-message'>;
-  instanceId?: string;
   participantId: string;
   text: string;
   timestamp: Date;
@@ -1034,7 +969,6 @@ export interface DailyEventObjectLiveStreamingStopped
 export interface DailyEventObjectTranscriptionStarted
   extends DailyEventObjectBase {
   action: Extract<DailyEvent, 'transcription-started'>;
-  instanceId: string;
   transcriptId?: string;
   language: string;
   model: string;
@@ -1051,14 +985,12 @@ export interface DailyEventObjectTranscriptionStarted
 export interface DailyEventObjectTranscriptionStopped
   extends DailyEventObjectBase {
   action: Extract<DailyEvent, 'transcription-stopped'>;
-  instanceId: string;
   updatedBy: string;
 }
 
 export interface DailyEventObjectTranscriptionError
   extends DailyEventObjectBase {
   action: Extract<DailyEvent, 'transcription-error'>;
-  instanceId: string;
   errorMsg?: string;
 }
 export interface DailyEventObjectRemoteMediaPlayerUpdate
@@ -1081,8 +1013,6 @@ export interface DailyEventObjectRemoteMediaPlayerStopped
 }
 export interface DailyEventObjectDialinConnected extends DailyEventObjectBase {
   action: Extract<DailyEvent, 'dialin-connected'>;
-  sipHeaders?: Record<string, any>;
-  sipFrom?: string;
   actionTraceId?: string;
 }
 
@@ -1094,8 +1024,6 @@ export interface DailyEventObjectDialinError extends DailyEventObjectBase {
 
 export interface DailyEventObjectDialinStopped extends DailyEventObjectBase {
   action: Extract<DailyEvent, 'dialin-stopped'>;
-  sipHeaders?: Record<string, any>;
-  sipFrom?: string;
   actionTraceId?: string;
 }
 
@@ -1108,7 +1036,6 @@ export interface DailyEventObjectDialinWarning extends DailyEventObjectBase {
 export interface DailyEventObjectDialOutConnected extends DailyEventObjectBase {
   action: Extract<DailyEvent, 'dialout-connected'>;
   sessionId?: string;
-  userId?: string;
   actionTraceId?: string;
 }
 
@@ -1116,14 +1043,12 @@ export interface DailyEventObjectDialOutError extends DailyEventObjectBase {
   action: Extract<DailyEvent, 'dialout-error'>;
   errorMsg: string;
   sessionId?: string;
-  userId?: string;
   actionTraceId?: string;
 }
 
 export interface DailyEventObjectDialOutStopped extends DailyEventObjectBase {
   action: Extract<DailyEvent, 'dialout-stopped'>;
   sessionId?: string;
-  userId?: string;
   actionTraceId?: string;
 }
 
@@ -1131,7 +1056,6 @@ export interface DailyEventObjectDialOutWarning extends DailyEventObjectBase {
   action: Extract<DailyEvent, 'dialout-warning'>;
   errorMsg: string;
   sessionId?: string;
-  userId?: string;
   actionTraceId?: string;
 }
 
@@ -1196,8 +1120,6 @@ export type DailyEventObject<T extends DailyEvent = any> =
     ? DailyEventObjectCpuLoadEvent
     : T extends DailyEventObjectNetworkConnectionEvent['action']
     ? DailyEventObjectNetworkConnectionEvent
-    : T extends DailyEventObjectTestCompleted['action']
-    ? DailyEventObjectTestCompleted
     : T extends DailyEventObjectActiveSpeakerChange['action']
     ? DailyEventObjectActiveSpeakerChange
     : T extends DailyEventObjectReceiveSettingsUpdated['action']
@@ -1431,17 +1353,6 @@ export interface DailyTranscriptionDeepgramOptions {
   punctuate?: boolean;
   extra?: Record<string, any>;
   includeRawResponse?: boolean;
-  instanceId?: string;
-  participants?: Array<string>;
-}
-
-export interface DailyTranscriptionUpdateOptions {
-  instanceId?: string;
-  participants: Array<string>;
-}
-
-export interface DailyTranscriptionStopOptions {
-  instanceId?: string;
 }
 
 export type DailyDialOutAudioCodecs = 'PCMU' | 'OPUS' | 'G722' | 'PCMA';
@@ -1460,7 +1371,6 @@ export interface DailyDialOutSession {
 export interface DailyStartDialoutSipOptions {
   sipUri?: string;
   displayName?: string;
-  userId?: string;
   video?: boolean;
   codecs?: DailyDialOutCodecs;
 }
@@ -1468,24 +1378,12 @@ export interface DailyStartDialoutSipOptions {
 export interface DailyStartDialoutPhoneOptions {
   phoneNumber?: string;
   displayName?: string;
-  userId?: string;
   codecs?: DailyDialOutCodecs;
-  callerId?: string;
 }
 
 export type DailyStartDialoutOptions =
   | DailyStartDialoutSipOptions
   | DailyStartDialoutPhoneOptions;
-
-export interface DailySipCallTransferOptions {
-  sessionId: string;
-  toEndPoint: string;
-}
-
-export interface DailySipReferOptions {
-  sessionId: string;
-  toEndPoint: string;
-}
 
 export interface DailyCall {
   callClientId: string;
@@ -1582,23 +1480,11 @@ export interface DailyCall {
     options: DailyRemoteMediaPlayerUpdateOptions
   ): Promise<DailyRemoteMediaPlayerInfo>;
   startTranscription(options?: DailyTranscriptionDeepgramOptions): void;
-  updateTranscription(options: DailyTranscriptionUpdateOptions): void;
-  stopTranscription(options?: DailyTranscriptionStopOptions): void;
+  stopTranscription(): void;
   preAuth(properties?: DailyCallOptions): Promise<{ access: DailyAccess }>;
   load(properties?: DailyLoadOptions): Promise<void>;
   startScreenShare(properties?: DailyStartScreenShare): void;
   stopScreenShare(): void;
-  testPeerToPeerCallQuality(options: {
-    videoTrack: MediaStreamTrack;
-    duration?: number;
-  }): Promise<DailyP2PCallQualityTestResults>;
-  stopTestPeerToPeerCallQuality(): void;
-  testWebsocketConnectivity(): Promise<DailyWebsocketConnectivityTestResults>;
-  abortTestWebsocketConnectivity(): void;
-  testNetworkConnectivity(
-    videoTrack: MediaStreamTrack
-  ): Promise<DailyNetworkConnectivityTestStats>;
-  abortTestNetworkConnectivity(): void;
   getNetworkStats(): Promise<DailyNetworkStats>;
   getCpuLoadStats(): Promise<DailyCpuLoadStats>;
   updateSendSettings(settings: DailySendSettings): Promise<DailySendSettings>;
@@ -1641,8 +1527,6 @@ export interface DailyCall {
   ): Promise<{ session?: DailyDialOutSession }>;
   stopDialOut(options: { sessionId: string }): Promise<void>;
   sendDTMF(options: { sessionId: string; tones: string }): Promise<void>;
-  sipCallTransfer(options: DailySipCallTransferOptions): Promise<void>;
-  sipRefer(options: DailySipReferOptions): Promise<void>;
 }
 
 declare const Daily: DailyCallFactory & DailyCallStaticUtils;
